@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 from models import Defect, Vehicle, MotTest
 from export import create_pdf
+from logging_config import logger
 
 load_dotenv()
 
@@ -30,6 +31,10 @@ def fetch(reg: str) -> Vehicle:
     response = requests.get(VEHICLE_ENDPOINT + reg, headers=headers)
 
     data = response.json()
+
+    if "errorMessage" in data:
+        raise Exception(data["errorMessage"])
+
     clean_data = clean_vehicle_data(data)
 
     clean_data["motTests"] = [
@@ -40,7 +45,7 @@ def fetch(reg: str) -> Vehicle:
     return Vehicle(**clean_data)
 
 def main():
-    vehicle = fetch("kx61zdd")
+    vehicle = fetch("ap22edd")
     create_pdf("output.pdf", vehicle)
 
 if __name__ == "__main__":

@@ -2,7 +2,6 @@ from io import BytesIO
 from datetime import datetime
 from collections import Counter
 from typing import List
-import logging
 
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Image, Table, TableStyle, Paragraph, Spacer, PageBreak
@@ -12,8 +11,7 @@ from reportlab.lib import colors
 from image import create_image
 from models import Vehicle, MotTest
 from plot import create_line_graph
-
-logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+from logging_config import logger
 
 def create_paragraph_styles(styles) -> dict:
     return {
