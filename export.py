@@ -75,7 +75,7 @@ def create_pdf(filename: str, vehicle: Vehicle) -> None:
         if value != None:
             elements.append(Paragraph(f"{label}: {value}", styles["Normal"]))
 
-    # -- SAFETY INFORMATION SECTION
+    # SAFETY INFORMATION SECTION
     safety_info = [
         ("Outstanding Recall?", vehicle.hasOutstandingRecall)
     ]
