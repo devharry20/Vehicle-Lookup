@@ -12,3 +12,7 @@ To run this project on your local machine, follow these steps:
 
 ## Important Notes
 The API provides limited data for newer vehicles, which is why many model fields are optional. New vehicles are MOT-exempt for the first 3 years, so MOT data will not be available for them until after their first test.
+
+## Example 
+![Main image](https://i.gyazo.com/bc9ba05f132d99384cc61e3769194706.png)
+![Second image](https://i.gyazo.com/c87b788b899264c4a6edca0983c45a4b.png)
