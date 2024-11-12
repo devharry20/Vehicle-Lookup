@@ -7,7 +7,7 @@ This project leverages the UK DVSA [MOT History API](https://documentation.histo
 To run this project on your local machine, follow these steps:
 
 1. Clone or download the repository from [https://github.com/devharry20/Vehicle-Lookup](https://github.com/devharry20/Vehicle-Lookup).
-2. Create a `.env` file (or use the example provided in the repository) and populate the `API_KEY` and `AUTHORIZATION_KEY` fields.
+2. Create a `.env` file and populate it with `API_KEY` and `AUTHORIZATION_KEY` fields
 3. Install the required dependencies by running the command: `pip install -r requirements.txt`
 
 ## Important Notes
