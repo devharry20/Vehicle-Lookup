@@ -9,7 +9,7 @@ from export import create_pdf
 
 load_dotenv()
 
-VEHICLE_ENDPOINT = os.getenv("VEHICLE_ENDPOINT")
+VEHICLE_ENDPOINT = "https://history.mot.api.gov.uk/v1/trade/vehicles/registration/"
 AUTHORIZATION_KEY = os.getenv("AUTHORIZATION_KEY")
 API_KEY = os.getenv("API_KEY")
 
