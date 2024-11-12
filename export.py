@@ -31,6 +31,7 @@ def create_image_buffer(registration: str) -> BytesIO:
     return img_buffer
 
 def calculate_avg_mileage(mot_tests: List[MotTest]) -> float:
+    """Calculates the average mileage per year across all of the vehicles MOTs"""
     avg_mileage = int(mot_tests[0].odometerValue) # Default to the first MOT mileage reading
     for i in range(1, len(mot_tests)): # Start at index 1 to skip including the first mot reading twice
         prev = mot_tests[i-1].odometerValue
