@@ -190,4 +190,4 @@ def create_pdf(filename: str, vehicle: Vehicle) -> None:
             elements.append(Paragraph(f"<b>No MOT data available</b>", styles["Heading2"]))
 
     document.build(elements)
-    logging.info(f"Generated PDF for {vehicle.registration} to {filename}")
+    logger.info(f"Generated PDF for {vehicle.registration} to {filename}")
