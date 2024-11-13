@@ -15,4 +15,4 @@ The API provides limited data for newer vehicles, which is why many model fields
 
 ## Example 
 ![Main image](main-info.png)
-![Second image](mot-ifo.png)
+![Second image](mot-info.png)
