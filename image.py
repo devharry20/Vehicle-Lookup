@@ -7,7 +7,7 @@ from PIL import ImageDraw
 base_dir = Path(__file__).resolve().parent
 static_dir = base_dir / "static"
 
-img = Image.open(static_dir / "images/empty_plate.png")
+img = Image.new("RGB", (700, 170), (247, 195, 30, 255))
 font = ImageFont.truetype(static_dir / "fonts/UKNumberPlate.ttf", 160)
 
 def create_image(reg: str) -> Image:
