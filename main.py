@@ -15,6 +15,7 @@ AUTHORIZATION_KEY = os.getenv("AUTHORIZATION_KEY")
 API_KEY = os.getenv("API_KEY")
 
 def clean_vehicle_data(data: dict) -> dict:
+    """Cleans data to remove unwanted fields"""
     expected_keys = {field.name for field in fields(Vehicle)}
 
     cleaned_data = {key: value for key, value in data.items() if key in expected_keys}
@@ -22,6 +23,7 @@ def clean_vehicle_data(data: dict) -> dict:
     return cleaned_data
 
 def fetch(reg: str) -> Vehicle:
+    """Fetch and return vehicle data from the API"""
     url = f"{VEHICLE_ENDPOINT}{reg}"
 
     headers = {
@@ -45,7 +47,7 @@ def fetch(reg: str) -> Vehicle:
     return Vehicle(**clean_data)
 
 def main():
-    vehicle = fetch("ap22edd")
+    vehicle = fetch("ls51aux")
     create_pdf("output.pdf", vehicle)
 
 if __name__ == "__main__":
