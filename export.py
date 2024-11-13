@@ -2,6 +2,7 @@ from io import BytesIO
 from datetime import datetime
 from collections import Counter
 from typing import List
+import re
 
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Image, Table, TableStyle, Paragraph, Spacer, PageBreak
@@ -14,10 +15,12 @@ from plot import create_line_graph
 from logging_config import logger
 
 def create_paragraph_styles(styles) -> dict:
+    """Returns pre-set Paragraph styling"""
+    bold = ParagraphStyle("BoldStyle", parent=styles["Normal"], fontName="Helvetica-Bold")
     return {
-        "BOLD": ParagraphStyle("BoldStyle", parent=styles["Normal"], fontName="Helvetica-Bold"),
-        "RED": ParagraphStyle("RedText", parent=styles["Normal"], textColor=colors.red),
-        "AMBER": ParagraphStyle("AmberText", parent=styles["Normal"], textColor=colors.orangered)
+        "BOLD": bold,
+        "AMBER": ParagraphStyle("AmberText", parent=styles["Normal"], textColor=colors.orangered),
+        "MAJOR": ParagraphStyle("RedText", parent=bold, textColor=colors.red),
     }
 
 def create_image_buffer(registration: str) -> BytesIO:
@@ -47,8 +50,8 @@ def create_pdf(filename: str, vehicle: Vehicle) -> None:
     custom_styles = create_paragraph_styles(styles)
 
     bold_style = custom_styles["BOLD"]
-    red_text = custom_styles["RED"]
     amber_text = custom_styles["AMBER"]
+    major_text = custom_styles["MAJOR"]
 
     reg_img_buffer = create_image_buffer(vehicle.registration)
     reportlab_image = Image(reg_img_buffer, 173.25, 41.75)
@@ -62,7 +65,7 @@ def create_pdf(filename: str, vehicle: Vehicle) -> None:
         ("Registered Date", (datetime.strptime(vehicle.registrationDate, "%Y-%m-%d").strftime("%d/%m/%Y"))),
         ("Body Colour", vehicle.primaryColour),
         ("Fuel Type", vehicle.fuelType),
-        ("Engine Capacity", vehicle.engineSize),
+        ("Engine Capacity", f"{vehicle.engineSize}cc" if vehicle.engineSize != None else "Unavailable"),
         ("No. Doors", "N/A"),
         ("No. Seats", "N/A")
     ]
@@ -145,13 +148,15 @@ def create_pdf(filename: str, vehicle: Vehicle) -> None:
 
         elements.append(Paragraph(f"Recurring faults ({len(advisories_sorted)}):", bold_style))
 
+        re_format = "\(.*?\)[()]" # Removes all items inside of () and any hanging parenthesis left over
+
         if majors_sorted:
             for major in majors_sorted:
-                elements.append(Paragraph(f"{major} (x{major_counts[major]})", red_text, bulletText="-"))
+                elements.append(Paragraph(f"MAJOR: {re.sub(re_format, "", major)} (x{major_counts[major]})", major_text, bulletText="-"))
 
         if advisories_sorted:
             for advisory in advisories_sorted:
-                elements.append(Paragraph(f"{advisory} (x{advisory_counts[advisory]})", amber_text, bulletText="-"))
+                elements.append(Paragraph(f"ADVISE: {re.sub(re_format, "", advisory)} (x{advisory_counts[advisory]})", amber_text, bulletText="-"))
 
         elements.append(PageBreak())
 
