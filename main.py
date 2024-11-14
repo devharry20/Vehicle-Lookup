@@ -4,15 +4,15 @@ from dataclasses import fields
 
 from dotenv import load_dotenv
 
-from models import Defect, Vehicle, MotTest
+from models import Defect, MotTest, Vehicle
 from export import create_pdf
-from logging_config import logger
 
 load_dotenv()
 
-VEHICLE_ENDPOINT = "https://history.mot.api.gov.uk/v1/trade/vehicles/registration/"
-AUTHORIZATION_KEY = os.getenv("AUTHORIZATION_KEY")
-API_KEY = os.getenv("API_KEY")
+MOT_VEHICLE_ENDPOINT = "https://history.mot.api.gov.uk/v1/trade/vehicles/registration/"
+VES_API_ENDPOINT = "https://driver-vehicle-licensing.api.gov.uk/vehicle-enquiry/v1/vehicles"
+MOT_AUTHORIZATION_KEY = os.getenv("MOT_AUTHORIZATION_KEY")
+MOT_API_KEY = os.getenv("MOT_API_KEY")
 
 def clean_vehicle_data(data: dict) -> dict:
     """Cleans data to remove unwanted fields"""
@@ -22,29 +22,80 @@ def clean_vehicle_data(data: dict) -> dict:
 
     return cleaned_data
 
-def fetch(reg: str) -> Vehicle:
-    """Fetch and return vehicle data from the API"""
-    url = f"{VEHICLE_ENDPOINT}{reg}"
+def fetch_ves_data() -> dict:
+    """Fetch vehicle data from the VES api"""
+    headers = {
+    'x-api-key': '8yVDlLtvpi1YgIhVrR8th3bZgFvclfAl80560NjC',
+    'Content-Type': 'application/json'
+    }
+
+    response = requests.request("POST", VES_API_ENDPOINT, headers=headers, data = "{\n\t\"registrationNumber\": \"FN08DWM\"\n}")
+    res_json = response.json()
+
+    return res_json
+
+def fetch_mot_data(reg: str) -> dict:
+    """Fetch vehicle data from the MOT data api"""
+    url = f"{MOT_VEHICLE_ENDPOINT}{reg}"
 
     headers = {
-        "Authorization": f"Bearer {AUTHORIZATION_KEY}",
-        "X-API-Key": API_KEY
+        "Authorization": f"Bearer {MOT_AUTHORIZATION_KEY}",
+        "X-API-Key": MOT_API_KEY
     }
-    response = requests.get(VEHICLE_ENDPOINT + reg, headers=headers)
+    response = requests.get(url, headers=headers)
 
-    data = response.json()
+    return response.json()
 
-    if "errorMessage" in data:
-        raise Exception(data["errorMessage"])
+def merge_data(mot_data, ves_data) -> dict:
+    """Merge data from 2 dictionaries into one"""
+    merged_data = {
+        "registration": mot_data.get("registration", ves_data.get("registrationNumber")),
+        "make": mot_data.get("make", ves_data.get("make")),
+        "model": mot_data.get("model", ves_data.get("model")),
+        "firstUsedDate": mot_data.get("firstUsedDate"),
+        "fuelType": mot_data.get("fuelType", ves_data.get("fuelType")),
+        "primaryColour": mot_data.get("primaryColour", ves_data.get("colour")),
+        "registrationDate": mot_data.get("registrationDate"),
+        "manufactureDate": mot_data.get("manufactureDate"),
+        "engineSize": mot_data.get("engineSize", ves_data.get("engineCapacity")),
+        "motTestDueDate": mot_data.get("motTestDueDate"),
+        "hasOutstandingRecall": mot_data.get("hasOutstandingRecall"),
+        "motTests": mot_data.get("motTests", []),
+        "taxStatus": ves_data.get("taxStatus"),
+        "taxDueDate": ves_data.get("taxDueDate"),
+        "motStatus": ves_data.get("motStatus"),
+        "yearOfManufacture": ves_data.get("yearOfManufacture"),
+        "co2Emissions": ves_data.get("co2Emissions"),
+        "markedForExport": ves_data.get("markedForExport"),
+        "typeApproval": ves_data.get("typeApproval"),
+        "dateOfLastV5CIssued": ves_data.get("dateOfLastV5CIssued"),
+        "motExpiryDate": ves_data.get("motExpiryDate"),
+        "wheelplan": ves_data.get("wheelplan"),
+        "monthOfFirstRegistration": ves_data.get("monthOfFirstRegistration"),
+        "monthOfFirstDvlaRegistration": ves_data.get("monthOfFirstDvlaRegistration")
+    }
 
-    clean_data = clean_vehicle_data(data)
+    return merged_data
 
-    clean_data["motTests"] = [
+def fetch(reg: str) -> Vehicle:
+    """Return a Vehicle object using cleaned, merged data"""
+    mot_data = fetch_mot_data(reg)
+    ves_data = fetch_ves_data()
+
+    if "errorMessage" in mot_data:
+        raise Exception(mot_data["errorMessage"])
+
+    clean_mot_data = clean_vehicle_data(mot_data)
+    clean_ves_data = clean_vehicle_data(ves_data)
+
+    clean_mot_data["motTests"] = [
         MotTest(**{k: v for k, v in test.items() if k != 'defects'}, defects=[Defect(**defect) for defect in test['defects']])
-        for test in clean_data.get("motTests", [])
+        for test in clean_mot_data.get("motTests", [])
     ]
 
-    return Vehicle(**clean_data)
+    merged_data = merge_data(clean_mot_data, clean_ves_data)
+
+    return Vehicle(**merged_data)
 
 def main():
     vehicle = fetch("ls51aux")
