@@ -58,51 +58,47 @@ def create_pdf(filename: str, vehicle: Vehicle) -> None:
     elements.append(reportlab_image)
     elements.append(Spacer(0, 10))
 
-    # VEHICLE INFORMATION SECTION
+    # VEHICLE IDENTIFICATION AND REGISTRATION SECTION
     vehicle_info = [
         ("Registration", vehicle.registration),
         ("Make & Model", f"{vehicle.make} {vehicle.model}"),
-        ("Registered Date", (datetime.strptime(vehicle.registrationDate, "%Y-%m-%d").strftime("%d/%m/%Y"))),
-        ("Body Colour", vehicle.primaryColour),
-        ("Fuel Type", vehicle.fuelType),
-        ("Engine Capacity", f"{vehicle.engineSize}cc" if vehicle.engineSize != None else "Unavailable"),
-        ("No. Doors", "N/A"),
-        ("No. Seats", "N/A")
+        ("Colour", vehicle.primaryColour),
+        ("Wheel Plan", vehicle.wheelplan),
+        ("Registration Date", (datetime.strptime(vehicle.registrationDate, "%Y-%m-%d").strftime("%d/%m/%Y"))),
+        ("First Used Date", (datetime.strptime(vehicle.firstUsedDate, "%Y-%m-%d").strftime("%d/%m/%Y"))),
+        ("Last V5C Issued", datetime.strptime(vehicle.dateOfLastV5CIssued, "%Y-%m-%d").strftime("%d/%m/%Y")),
+        ("Type Approval", vehicle.typeApproval),
+        ("Marked for Export", "No" if vehicle.markedForExport == False else "Yes")
     ]
 
-    elements.append(Paragraph("<b>Vehicle Information</b>", styles["Heading2"]))
+    elements.append(Paragraph("<b>Vehicle Identification and Registration</b>", styles["Heading2"]))
     for label, value in vehicle_info:
         # Preventing data that is None from showing
         if value != None:
             elements.append(Paragraph(f"{label}: {value}", styles["Normal"]))
 
-    # SAFETY INFORMATION SECTION
-    safety_info = [
-        ("Outstanding Recall?", vehicle.hasOutstandingRecall)
+    # VEHICLE CONDITION AND INSPECTION SECTION
+    condition_info = [
+        ("Fuel Type", vehicle.fuelType),
+        ("Engine Capacity", vehicle.engineSize),
+        ("Co2 Emissions", f"{vehicle.co2Emissions} g/km"),
+        ("Mot Due", vehicle.motTestDueDate),
+        ("Mot Expiry Date", datetime.strptime(vehicle.motExpiryDate, "%Y-%m-%d").strftime("%d/%m/%Y")),
+        ("Recalls?", "No" if vehicle.hasOutstandingRecall == "Unknown" else vehicle.hasOutstandingRecall),
+        ("Tax Status", vehicle.taxStatus),
+        ("Tax Due", datetime.strptime(vehicle.taxDueDate, "%Y-%m-%d").strftime("%d/%m/%Y")),
     ]
 
-    elements.append(Paragraph("<b>Safety Information</b>", styles["Heading2"]))
-    for label, value in safety_info:
+    elements.append(Paragraph("<b>Vehicle Condition and Inspection</b>", styles["Heading2"]))
+    for label, value in condition_info:
         elements.append(Paragraph(f"{label}: {value}", styles["Normal"]))
 
     # Checking that there is MOT data
     if len(vehicle.motTests) != 0:
-        # MOT STATUS SECTION
-        mot_valid = (vehicle.motTests[0].testResult == "PASSED" and datetime.strptime(vehicle.motTests[0].expiryDate, "%Y-%m-%d") >= datetime.now() if len(vehicle.motTests) > 0 else "None")
-        mot_status = [
-            ("MOT Valid", "Yes" if mot_valid else "No"),
-            ("Recent Test Date", (datetime.strptime(vehicle.motTests[0].completedDate, "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%d/%m/%Y %H:%M"))),
-            ("Recent Result", vehicle.motTests[0].testResult),
-            ("Recent Odometer Reading", f"{int(vehicle.motTests[0].odometerValue):,} {vehicle.motTests[0].odometerUnit}"),
-            ("Recent Location", vehicle.motTests[0].location if vehicle.motTests[0].location is not None else "N/A")
-        ]
-
-        elements.append(Paragraph("<b>MOT Status</b>", styles["Heading2"]))
-        for label, value in mot_status:
-            elements.append(Paragraph(f"{label}: {value}", styles["Normal"]))
-
         # MOT INFORMATION SECTION
         mots = [["Date", "Mileage", "Comments", "Result"]]
+        advisories = [] 
+        majors = []
         
         # Populate the mots list with lists of mots
         for mot in vehicle.motTests:
@@ -112,9 +108,6 @@ def create_pdf(filename: str, vehicle: Vehicle) -> None:
                 len(mot.defects), 
                 mot.testResult
             ])
-
-        advisories = [] 
-        majors = []
 
         # Populate the advisories and majors lists and add the odometerValue differences to the avg_mileage variable
         for i, mot in enumerate(vehicle.motTests):
@@ -127,8 +120,14 @@ def create_pdf(filename: str, vehicle: Vehicle) -> None:
         avg_mileage = calculate_avg_mileage(vehicle.motTests)
         total_passes = sum(1 for x in vehicle.motTests if x.testResult == "PASSED")
         total_fails = sum(1 for x in vehicle.motTests if x.testResult == "FAILED")
-
+        
         mot_info = [
+            ("MOT Valid", vehicle.motStatus),
+            ("Recent Test Date", (datetime.strptime(vehicle.motTests[0].completedDate, "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%d/%m/%Y"))),
+            ("Recent Result", vehicle.motTests[0].testResult),
+            ("Recent Odometer Reading", f"{int(vehicle.motTests[0].odometerValue):,}"),
+            ("Odometer Unit", "Miles" if vehicle.motTests[0].odometerUnit == "MI" else "Kilometers"),
+            ("Recent Location", vehicle.motTests[0].location if vehicle.motTests[0].location is not None else "N/A"),
             ("Total No. Passes", total_passes),
             ("Total No. Fails", total_fails),
             ("Pass Rate", f"{round((total_passes / (total_passes + total_fails) * 100))}%"),
