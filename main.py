@@ -11,6 +11,7 @@ load_dotenv()
 
 MOT_VEHICLE_ENDPOINT = "https://history.mot.api.gov.uk/v1/trade/vehicles/registration/"
 VES_API_ENDPOINT = "https://driver-vehicle-licensing.api.gov.uk/vehicle-enquiry/v1/vehicles"
+VES_API_KEY = os.getenv("VES_API_KEY")
 MOT_AUTHORIZATION_KEY = os.getenv("MOT_AUTHORIZATION_KEY")
 MOT_API_KEY = os.getenv("MOT_API_KEY")
 
@@ -22,14 +23,14 @@ def clean_vehicle_data(data: dict) -> dict:
 
     return cleaned_data
 
-def fetch_ves_data() -> dict:
+def fetch_ves_data(reg: str) -> dict:
     """Fetch vehicle data from the VES api"""
     headers = {
-    'x-api-key': '8yVDlLtvpi1YgIhVrR8th3bZgFvclfAl80560NjC',
-    'Content-Type': 'application/json'
+    "x-api-key": VES_API_KEY,
+    "Content-Type": "application/json"
     }
 
-    response = requests.request("POST", VES_API_ENDPOINT, headers=headers, data = "{\n\t\"registrationNumber\": \"FN08DWM\"\n}")
+    response = requests.request("POST", VES_API_ENDPOINT, headers=headers, data = "{\n\t\"registrationNumber\": \"" + reg + "\"\n}")
     res_json = response.json()
 
     return res_json
@@ -80,7 +81,7 @@ def merge_data(mot_data, ves_data) -> dict:
 def fetch(reg: str) -> Vehicle:
     """Return a Vehicle object using cleaned, merged data"""
     mot_data = fetch_mot_data(reg)
-    ves_data = fetch_ves_data()
+    ves_data = fetch_ves_data(reg)
 
     if "errorMessage" in mot_data:
         raise Exception(mot_data["errorMessage"])
