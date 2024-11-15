@@ -17,9 +17,9 @@ MOT_API_KEY = os.getenv("MOT_API_KEY")
 
 def clean_vehicle_data(data: dict) -> dict:
     """Cleans data to remove unwanted fields"""
-    expected_keys = {field.name for field in fields(Vehicle)}
+    vehicle_fields = {field.name for field in fields(Vehicle)}
 
-    cleaned_data = {key: value for key, value in data.items() if key in expected_keys}
+    cleaned_data = {key: value for key, value in data.items() if key in vehicle_fields}
 
     return cleaned_data
 
@@ -49,32 +49,17 @@ def fetch_mot_data(reg: str) -> dict:
 
 def merge_data(mot_data, ves_data) -> dict:
     """Merge data from 2 dictionaries into one"""
-    merged_data = {
-        "registration": mot_data.get("registration", ves_data.get("registrationNumber")),
-        "make": mot_data.get("make", ves_data.get("make")),
-        "model": mot_data.get("model", ves_data.get("model")),
-        "firstUsedDate": mot_data.get("firstUsedDate"),
-        "fuelType": mot_data.get("fuelType", ves_data.get("fuelType")),
-        "primaryColour": mot_data.get("primaryColour", ves_data.get("colour")),
-        "registrationDate": mot_data.get("registrationDate"),
-        "manufactureDate": mot_data.get("manufactureDate"),
-        "engineSize": mot_data.get("engineSize", ves_data.get("engineCapacity")),
-        "motTestDueDate": mot_data.get("motTestDueDate"),
-        "hasOutstandingRecall": mot_data.get("hasOutstandingRecall"),
-        "motTests": mot_data.get("motTests", []),
-        "taxStatus": ves_data.get("taxStatus"),
-        "taxDueDate": ves_data.get("taxDueDate"),
-        "motStatus": ves_data.get("motStatus"),
-        "yearOfManufacture": ves_data.get("yearOfManufacture"),
-        "co2Emissions": ves_data.get("co2Emissions"),
-        "markedForExport": ves_data.get("markedForExport"),
-        "typeApproval": ves_data.get("typeApproval"),
-        "dateOfLastV5CIssued": ves_data.get("dateOfLastV5CIssued"),
-        "motExpiryDate": ves_data.get("motExpiryDate"),
-        "wheelplan": ves_data.get("wheelplan"),
-        "monthOfFirstRegistration": ves_data.get("monthOfFirstRegistration"),
-        "monthOfFirstDvlaRegistration": ves_data.get("monthOfFirstDvlaRegistration")
-    }
+    merged_data = {}
+
+    _fields = [x.name for x in fields(Vehicle)]
+
+    for field in _fields:
+        merged_data[field] = mot_data.get(field) if field in mot_data else ves_data.get(field)
+
+    merged_data["motTests"] = [
+        MotTest(**{k: v for k, v in test.items() if k != 'defects'}, defects=[Defect(**defect) for defect in test['defects']])
+        for test in mot_data.get("motTests", [])
+    ]
 
     return merged_data
 
@@ -85,15 +70,13 @@ def fetch(reg: str) -> Vehicle:
 
     if "errorMessage" in mot_data:
         raise Exception(mot_data["errorMessage"])
+    
+    if "message" in ves_data:
+        if ves_data["message"] == "Forbidden":
+            raise Exception(ves_data["message"])
 
     clean_mot_data = clean_vehicle_data(mot_data)
     clean_ves_data = clean_vehicle_data(ves_data)
-
-    clean_mot_data["motTests"] = [
-        MotTest(**{k: v for k, v in test.items() if k != 'defects'}, defects=[Defect(**defect) for defect in test['defects']])
-        for test in clean_mot_data.get("motTests", [])
-    ]
-
     merged_data = merge_data(clean_mot_data, clean_ves_data)
 
     return Vehicle(**merged_data)
