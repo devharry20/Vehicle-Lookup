@@ -16,7 +16,7 @@ VES_API_KEY = Vehicle Enquiry Service API key
 3. Install the required dependencies by running the command: `pip install -r requirements.txt`
 
 ## Important Notes
-The API provides limited data for newer vehicles, which is why many model fields are optional. New vehicles are MOT-exempt for the first 3 years, so MOT data will not be available for them until after their first test.
+The MOT API provides limited data for newer vehicles, which is why many model fields are optional. New vehicles are MOT-exempt for the first 3 years, so MOT data will not be available for them until after their first test.
 
 ## Example 
 ![Main image](main-info.png)
