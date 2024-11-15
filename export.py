@@ -11,7 +11,7 @@ from reportlab.lib import colors
 
 from image import create_image
 from models import Vehicle, MotTest
-from plot import create_line_graph
+from plot import create_line_graph, create_stacked_bar_graph
 from logging_config import logger
 
 def create_paragraph_styles(styles) -> dict:
@@ -64,29 +64,27 @@ def create_pdf(filename: str, vehicle: Vehicle) -> None:
         ("Make & Model", f"{vehicle.make} {vehicle.model}"),
         ("Colour", vehicle.primaryColour),
         ("Wheel Plan", vehicle.wheelplan),
-        ("Registration Date", (datetime.strptime(vehicle.registrationDate, "%Y-%m-%d").strftime("%d/%m/%Y"))),
-        ("First Used Date", (datetime.strptime(vehicle.firstUsedDate, "%Y-%m-%d").strftime("%d/%m/%Y"))),
-        ("Last V5C Issued", datetime.strptime(vehicle.dateOfLastV5CIssued, "%Y-%m-%d").strftime("%d/%m/%Y")),
+        ("Registration Date", (datetime.strptime(vehicle.registrationDate, "%Y-%m-%d").strftime("%d/%m/%Y")) if vehicle.registrationDate else "Unavailable"),
+        ("First Used Date", (datetime.strptime(vehicle.firstUsedDate, "%Y-%m-%d").strftime("%d/%m/%Y")) if vehicle.firstUsedDate else "Unavailable"),
+        ("Last V5C Issued", datetime.strptime(vehicle.dateOfLastV5CIssued, "%Y-%m-%d").strftime("%d/%m/%Y") if vehicle.dateOfLastV5CIssued else "Unavailable"),
         ("Type Approval", vehicle.typeApproval),
-        ("Marked for Export", "No" if vehicle.markedForExport == False else "Yes")
+        ("Marked for Export", vehicle.markedForExport)
     ]
 
     elements.append(Paragraph("<b>Vehicle Identification and Registration</b>", styles["Heading2"]))
     for label, value in vehicle_info:
-        # Preventing data that is None from showing
-        if value != None:
-            elements.append(Paragraph(f"{label}: {value}", styles["Normal"]))
+        elements.append(Paragraph(f"{label}: {value}", styles["Normal"]))
 
     # VEHICLE CONDITION AND INSPECTION SECTION
     condition_info = [
         ("Fuel Type", vehicle.fuelType),
-        ("Engine Capacity", vehicle.engineSize),
+        ("Engine Capacity", vehicle.engineCapacity),
         ("Co2 Emissions", f"{vehicle.co2Emissions} g/km"),
-        ("Mot Due", vehicle.motTestDueDate),
-        ("Mot Expiry Date", datetime.strptime(vehicle.motExpiryDate, "%Y-%m-%d").strftime("%d/%m/%Y")),
+        ("Mot Due", vehicle.motTestDueDate if vehicle.motTestDueDate else "Unavailable"),
+        ("Mot Expiry Date", datetime.strptime(vehicle.motExpiryDate, "%Y-%m-%d").strftime("%d/%m/%Y") if vehicle.motExpiryDate else "Unavilable"),
         ("Recalls?", "No" if vehicle.hasOutstandingRecall == "Unknown" else vehicle.hasOutstandingRecall),
         ("Tax Status", vehicle.taxStatus),
-        ("Tax Due", datetime.strptime(vehicle.taxDueDate, "%Y-%m-%d").strftime("%d/%m/%Y")),
+        ("Tax Due", datetime.strptime(vehicle.taxDueDate, "%Y-%m-%d").strftime("%d/%m/%Y") if vehicle.taxDueDate else "Unavailable"),
     ]
 
     elements.append(Paragraph("<b>Vehicle Condition and Inspection</b>", styles["Heading2"]))
@@ -127,7 +125,7 @@ def create_pdf(filename: str, vehicle: Vehicle) -> None:
             ("Recent Result", vehicle.motTests[0].testResult),
             ("Recent Odometer Reading", f"{int(vehicle.motTests[0].odometerValue):,}"),
             ("Odometer Unit", "Miles" if vehicle.motTests[0].odometerUnit == "MI" else "Kilometers"),
-            ("Recent Location", vehicle.motTests[0].location if vehicle.motTests[0].location is not None else "N/A"),
+            ("Recent Location", vehicle.motTests[0].location),
             ("Total No. Passes", total_passes),
             ("Total No. Fails", total_fails),
             ("Pass Rate", f"{round((total_passes / (total_passes + total_fails) * 100))}%"),
@@ -159,8 +157,8 @@ def create_pdf(filename: str, vehicle: Vehicle) -> None:
 
         elements.append(PageBreak())
 
-        # MOT HISTORY SECTION
-        elements.append(Paragraph(f"<b>MOT History</b>", styles["Heading2"]))
+        # VISUAL INSIGHTS SECTION
+        elements.append(Paragraph(f"<b>Visual Insights</b>", styles["Heading2"]))
 
         dates = []
         mileage = []
@@ -170,10 +168,36 @@ def create_pdf(filename: str, vehicle: Vehicle) -> None:
             dates.append(datetime.strptime(mot.completedDate, "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%y"))
             mileage.append(mot.odometerValue)
 
-        # Create graph
-        graph = create_line_graph(x=dates[::-1], y=mileage[::-1], title="Vehicle Mileage by Year (yy)", x_label="", y_label="", marker="")
-        plot_img = Image(graph, width=500, height=300)
+        # GRAPHS
+        mileage_by_year_graph = create_line_graph(
+            x=dates[::-1], 
+            y=mileage[::-1], 
+            title="Vehicle Mileage by Year (yy)"
+        )
+        plot_img = Image(mileage_by_year_graph, width=500, height=300)
         elements.append(plot_img)
+
+        data = {}
+        for m in vehicle.motTests:
+            if len(m.defects) > 0:
+                data[round(int(m.odometerValue), -3)] = {
+                    "advisories": len([x for x in m.defects if x.type == "ADVISORY"]),
+                    "majors": len([x for x in m.defects if x.type == "MAJOR"])
+                }
+
+        comments_by_mileage_graph = create_stacked_bar_graph(
+            [str(x) for x in data.keys()], 
+            [value["advisories"] for value in data.values()], 
+            [value["majors"] for value in data.values()],
+            title="Majors & Advisories by Mileage"
+        )
+        _plot_img = Image(comments_by_mileage_graph, width=500, height=300)
+        elements.append(_plot_img)
+
+        elements.append(PageBreak())
+
+        # MOT HISTORY SECTION
+        elements.append(Paragraph(f"<b>MOT History</b>", styles["Heading2"]))
 
         # Create and style the MOT history table
         table = Table(mots, colWidths=[100, 100, 100, 100])
