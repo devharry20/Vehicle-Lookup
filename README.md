@@ -20,4 +20,5 @@ The MOT API provides limited data for newer vehicles, which is why many model fi
 
 ## Example 
 ![Main image](main-info.png)
-![Second image](mot-info.png)
+![Second image](visual-insights.png)
+![Third image](mot-info.png)
