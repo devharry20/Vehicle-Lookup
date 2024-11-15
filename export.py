@@ -185,6 +185,8 @@ def create_pdf(filename: str, vehicle: Vehicle) -> None:
                     "majors": len([x for x in m.defects if x.type == "MAJOR"])
                 }
 
+        data = dict(reversed(list(data.items())))
+
         comments_by_mileage_graph = create_stacked_bar_graph(
             [str(x) for x in data.keys()], 
             [value["advisories"] for value in data.values()], 
