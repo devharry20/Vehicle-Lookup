@@ -26,14 +26,13 @@ def clean_vehicle_data(data: dict) -> dict:
 def fetch_ves_data(reg: str) -> dict:
     """Fetch vehicle data from the VES api"""
     headers = {
-    "x-api-key": VES_API_KEY,
-    "Content-Type": "application/json"
+        "x-api-key": VES_API_KEY,
+        "Content-Type": "application/json"
     }
 
     response = requests.request("POST", VES_API_ENDPOINT, headers=headers, data = "{\n\t\"registrationNumber\": \"" + reg + "\"\n}")
-    res_json = response.json()
-
-    return res_json
+    
+    return response.json()
 
 def fetch_mot_data(reg: str) -> dict:
     """Fetch vehicle data from the MOT data api"""
