@@ -5,13 +5,12 @@ from dataclasses import fields
 
 from dotenv import load_dotenv
 
-from models import Defect, MotTest, Vehicle
-from export import create_pdf
+from .models import Defect, MotTest, Vehicle
+from .export import create_pdf
+from . import MOT_VEHICLE_ENDPOINT, VES_API_ENDPOINT
 
 load_dotenv()
 
-MOT_VEHICLE_ENDPOINT = "https://history.mot.api.gov.uk/v1/trade/vehicles/registration/"
-VES_API_ENDPOINT = "https://driver-vehicle-licensing.api.gov.uk/vehicle-enquiry/v1/vehicles"
 VES_API_KEY = os.getenv("VES_API_KEY")
 MOT_AUTHORIZATION_KEY = os.getenv("MOT_AUTHORIZATION_KEY")
 MOT_API_KEY = os.getenv("MOT_API_KEY")
@@ -32,10 +31,14 @@ def fetch_ves_data(reg: str) -> dict:
     }
 
     rq_data = {
-        "registraion": reg,
+        "registrationNumber": reg 
     }
-    rq_json = json.dumps(rq_data)
-    response = requests.post(VES_API_ENDPOINT, json=rq_json, headers=headers)
+
+    response = requests.post(
+        VES_API_ENDPOINT,
+        data=json.dumps(rq_data), 
+        headers=headers
+    )
     
     return response.json()
 

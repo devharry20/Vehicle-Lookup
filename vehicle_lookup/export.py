@@ -9,10 +9,10 @@ from reportlab.platypus import SimpleDocTemplate, Image, Table, TableStyle, Para
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 
-from image import create_image
-from models import Vehicle, MotTest
-from plot import create_line_graph, create_stacked_bar_graph
-from logging_config import logger
+from .image import create_image
+from .models import Vehicle, MotTest
+from .plot import create_line_graph, create_stacked_bar_graph
+from .logging_config import logger
 
 def create_paragraph_styles(styles) -> dict:
     """Returns pre-set Paragraph styling"""
