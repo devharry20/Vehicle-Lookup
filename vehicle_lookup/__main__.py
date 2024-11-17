@@ -19,8 +19,12 @@ MOT_API_KEY = os.getenv("MOT_API_KEY")
 def clean_vehicle_data(data: dict) -> dict:
     """Cleans data to remove unwanted fields"""
     vehicle_fields = {field.name for field in fields(Vehicle)}
-
     cleaned_data = {key: value for key, value in data.items() if key in vehicle_fields}
+    
+    # Default all field values if they are None
+    for key, _ in cleaned_data.items():
+        if key == None:
+            cleaned_data[key] = "Unavailable"
 
     return cleaned_data
 

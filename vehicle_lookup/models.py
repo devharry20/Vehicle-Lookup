@@ -4,51 +4,51 @@ from typing import List, Optional
 @dataclass
 class Defect:
     dangerous: Optional[bool] = None
-    text: Optional[str] = "Unavailable"
-    type: Optional[str] = "Unavailable"
+    text: Optional[str] = None
+    type: Optional[str] = None
 
 @dataclass
 class MotTest:
-    motTestNumber: Optional[str] = "Unavailable"
+    motTestNumber: Optional[str] = None
     completedDate: Optional[str] = None
-    expiryDate: Optional[str] = "Unavailable"
-    odometerValue: Optional[str] = "Unavailable"
-    odometerUnit: Optional[str] = "Unavailable"
-    odometerResultType: Optional[str] = "Unavailable"
-    testResult: Optional[str] = "Unavailable"
-    dataSource: Optional[str] = "Unavailable"
+    expiryDate: Optional[str] = None
+    odometerValue: Optional[str] = None
+    odometerUnit: Optional[str] = None
+    odometerResultType: Optional[str] = None
+    testResult: Optional[str] = None
+    dataSource: Optional[str] = None
     defects: List[Defect] = field(default_factory=list)
-    location: Optional[str] = "Unavailable"
+    location: Optional[str] = None
 
 @dataclass
 class Vehicle:
     # MOT API data
-    registration: Optional[str] = "Unavailable"
-    make: Optional[str] = "Unavailable"
-    model: Optional[str] = "Unavailable"
+    registration: Optional[str] = None
+    make: Optional[str] = None
+    model: Optional[str] = None
     firstUsedDate: Optional[str] = None
-    fuelType: Optional[str] = "Unavailable"
-    primaryColour: Optional[str] = "Unavailable"
+    fuelType: Optional[str] = None
+    primaryColour: Optional[str] = None
     registrationDate: Optional[str] = None
     manufactureDate: Optional[str] = None
-    engineSize: Optional[str] = "Unavailable"
+    engineSize: Optional[str] = None
     motTestDueDate: Optional[str] = None
-    hasOutstandingRecall: Optional[str] = "Unavailable"
+    hasOutstandingRecall: Optional[str] = None
     motTests: List[MotTest] = field(default_factory=list)
 
     # VES API data
-    registrationNumber: Optional[str] = "Unavailable"
-    taxStatus: Optional[str] = "Unavailable"
+    registrationNumber: Optional[str] = None
+    taxStatus: Optional[str] = None
     taxDueDate: Optional[str] = None
-    motStatus: Optional[str] = "Unavailable"
-    yearOfManufacture: Optional[str] = "Unavailable"
+    motStatus: Optional[str] = None
+    yearOfManufacture: Optional[str] = None
     engineCapacity: Optional[int] = None
-    co2Emissions: Optional[int] = "Unavailable"
-    markedForExport: Optional[str] = "Unavailable"
-    colour: Optional[str] = "Unavailable"
-    typeApproval: Optional[str] = "Unavailable"
+    co2Emissions: Optional[int] = None
+    markedForExport: Optional[str] = None
+    colour: Optional[str] = None
+    typeApproval: Optional[str] = None
     dateOfLastV5CIssued: Optional[str] = None
     motExpiryDate: Optional[str] = None
-    wheelplan: Optional[str] = "Unavailable"
-    monthOfFirstRegistration: Optional[str] = "Unavailable"
-    monthOfFirstDvlaRegistration: Optional[str] = "Unavailable"
+    wheelplan: Optional[str] = None
+    monthOfFirstRegistration: Optional[str] = None
+    monthOfFirstDvlaRegistration: Optional[str] = None
