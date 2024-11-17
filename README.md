@@ -14,7 +14,7 @@ MOT_AUTHORIZATION_KEY = MOT API bearer key
 VES_API_KEY = Vehicle Enquiry Service API key
 ```
 3. Install the required dependencies by running the command: `pip install -r requirements.txt`
-4. Run `python -m vehicle_lookup` to run the project
+4. Run `python -m vehicle_lookup -r [REG] -o [OUTPUT FILE (pdf)]` to run the project
 
 ## Important Notes
 The MOT API provides limited data for newer vehicles, which is why many model fields are optional. New vehicles are MOT-exempt for the first 3 years, so MOT data will not be available for them until after their first test.
