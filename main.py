@@ -1,4 +1,5 @@
 import requests
+import json
 import os
 from dataclasses import fields
 
@@ -30,7 +31,11 @@ def fetch_ves_data(reg: str) -> dict:
         "Content-Type": "application/json"
     }
 
-    response = requests.request("POST", VES_API_ENDPOINT, headers=headers, data = "{\n\t\"registrationNumber\": \"" + reg + "\"\n}")
+    rq_data = {
+        "registraion": reg,
+    }
+    rq_json = json.dumps(rq_data)
+    response = requests.post(VES_API_ENDPOINT, json=rq_json, headers=headers)
     
     return response.json()
 
