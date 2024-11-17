@@ -1,6 +1,7 @@
 import requests
 import json
 import os
+import argparse
 from dataclasses import fields
 
 from dotenv import load_dotenv
@@ -89,8 +90,18 @@ def fetch(reg: str) -> Vehicle:
     return Vehicle(**merged_data)
 
 def main():
-    vehicle = fetch("ls51aux")
-    create_pdf("output.pdf", vehicle)
+    parser = argparse.ArgumentParser(description="Process a vehicle registration.")
+    parser.add_argument('-r', '--reg', required=True, help="Vehicle registration number")
+    parser.add_argument('-o', '--output', required=True, help="Output file (PDF)")
+    
+    args = parser.parse_args()
+
+    vehicle = fetch(args.reg.strip())
+
+    if not args.output.endswith(".pdf"):
+        args.output = f"{args.output}.pdf"
+
+    create_pdf(args.output, vehicle)
 
 if __name__ == "__main__":
     main()
